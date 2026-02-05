@@ -10,8 +10,8 @@ app = FastAPI(title="Portfolio RAG Backend")
 # CORS for Vercel frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all for debugging, restrict later if needed
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all for debugging
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"]
 )
