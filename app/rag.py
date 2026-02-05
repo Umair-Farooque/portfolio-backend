@@ -9,8 +9,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class RAGSystem:
-    def __init__(self, cv_path="cv_data.txt"):
-        self.cv_path = cv_path
+    def __init__(self, cv_path=None):
+        if cv_path is None:
+            # Get path to cv_data.txt relative to this file
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            self.cv_path = os.path.join(base_dir, "cv_data.txt")
+        else:
+            self.cv_path = cv_path
         self.vector_store = None
         self.qa_chain = None
         self.initialize_rag()
