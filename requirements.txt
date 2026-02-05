@@ -1,8 +1,8 @@
 fastapi
 uvicorn
-langchain
-langchain-community
-langchain-openai
+langchain==0.2.14
+langchain-community==0.2.12
+langchain-openai==0.1.22
 faiss-cpu
 python-dotenv
 tiktoken
