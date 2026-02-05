@@ -10,25 +10,19 @@ load_dotenv()
 
 class RAGSystem:
     def __init__(self, cv_path=None):
-        if cv_path is None:
-            # Get path to cv_data.txt relative to this file
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            self.cv_path = os.path.join(base_dir, "cv_data.txt")
-        else:
-            self.cv_path = cv_path
+        self.cv_path = cv_path or os.path.join(os.path.dirname(__file__), "cv_data.txt")
         self.vector_store = None
         self.qa_chain = None
-        self.initialize_rag()
 
     def initialize_rag(self):
-        if not os.path.exists(self.cv_path):
-            print(f"Warning: {self.cv_path} not found.")
-            return
+        if self.qa_chain:
+            return  # already initialized
 
-        # Check for API Key
+        if not os.path.exists(self.cv_path):
+            raise FileNotFoundError(f"{self.cv_path} not found.")
+
         if not os.getenv("OPENAI_API_KEY"):
-            print("Warning: OPENAI_API_KEY not found in environment variables.")
-            return
+            raise RuntimeError("OPENAI_API_KEY not found in environment variables.")
 
         try:
             # 1. Load Data
@@ -50,19 +44,20 @@ class RAGSystem:
                 chain_type="stuff",
                 retriever=self.vector_store.as_retriever()
             )
+
             print("RAG System initialized successfully.")
         except Exception as e:
-            print(f"Error initializing RAG: {e}")
+            raise RuntimeError(f"Error initializing RAG: {e}")
 
     def query(self, question: str):
         if not self.qa_chain:
-            return "System not initialized or API key missing."
-        
+            self.initialize_rag()  # initialize on first request
+
         try:
             response = self.qa_chain.invoke(question)
             return response.get("result", "No answer found.")
         except Exception as e:
             return f"Error processing query: {str(e)}"
 
-# Singleton instance
+# Singleton instance (but NOT initialized yet)
 rag_system = RAGSystem()

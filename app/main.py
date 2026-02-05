@@ -1,25 +1,19 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.rag import rag_system
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from app.rag import rag_system  # lazy-loaded
 import os
 
-app = FastAPI()
+app = FastAPI(title="Portfolio RAG Backend")
 
-# Enable CORS for frontend development
+# CORS for Vercel frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://portfolio-qllp3nx2x-muhammad-umair-farooqs-projects-8b12a4bf.vercel.app/"],  # or set to your Vercel URL
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
-
-# Define paths
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DIST_DIR = os.path.join(os.path.dirname(BASE_DIR), "dist")
 
 class QueryRequest(BaseModel):
     query: str
@@ -27,38 +21,22 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
 
-@app.get("/api/health")
-async def health_check():
+@app.get("/health")
+async def health():
     return {"status": "ok"}
 
-@app.post("/api/chat", response_model=QueryResponse)
+@app.post("/chat", response_model=QueryResponse)
 async def chat(request: QueryRequest):
-    if not request.query:
+    if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    
-    answer = rag_system.query(request.query)
-    return {"answer": answer}
 
-# Serve static files from the dist directory
-if os.path.exists(DIST_DIR):
-    app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
-    
-    # Also serve files in the root of dist (like favicon.ico, resume.pdf)
-    @app.get("/{file_path:path}")
-    async def serve_static(file_path: str):
-        # API requests should bypass this
-        if file_path.startswith("api/"):
-            raise HTTPException(status_code=404)
-            
-        full_path = os.path.join(DIST_DIR, file_path)
-        if os.path.exists(full_path) and os.path.isfile(full_path):
-            return FileResponse(full_path)
-        
-        # Fallback to index.html for SPA routing
-        return FileResponse(os.path.join(DIST_DIR, "index.html"))
-else:
-    print(f"Warning: {DIST_DIR} not found. Static files will not be served.")
+    try:
+        answer = rag_system.query(request.query)
+        return {"answer": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Optional: favicon to remove browser 500s
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static/favicon.ico"))
