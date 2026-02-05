@@ -19,24 +19,32 @@ class RAGSystem:
             return  # already initialized
 
         if not os.path.exists(self.cv_path):
-            raise FileNotFoundError(f"{self.cv_path} not found.")
+            error_msg = f"CV data file not found at {self.cv_path}. Please ensure 'app/cv_data.txt' exists."
+            print(f"ERROR: {error_msg}")
+            raise FileNotFoundError(error_msg)
 
         if not os.getenv("OPENAI_API_KEY"):
-            raise RuntimeError("OPENAI_API_KEY not found in environment variables.")
+            error_msg = "OPENAI_API_KEY not found in environment variables. Check Render dashboard."
+            print(f"ERROR: {error_msg}")
+            raise RuntimeError(error_msg)
 
         try:
+            print(f"Loading data from {self.cv_path}...")
             # 1. Load Data
             loader = TextLoader(self.cv_path)
             documents = loader.load()
 
+            print("Splitting text into chunks...")
             # 2. Split Text
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             texts = text_splitter.split_documents(documents)
 
+            print("Creating embeddings and vector store (FAISS)...")
             # 3. Create Embeddings & Vector Store
             embeddings = OpenAIEmbeddings()
             self.vector_store = FAISS.from_documents(texts, embeddings)
 
+            print("Initializing RetrievalQA chain...")
             # 4. Create Retrieval Chain
             llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
             self.qa_chain = RetrievalQA.from_chain_type(
@@ -45,9 +53,11 @@ class RAGSystem:
                 retriever=self.vector_store.as_retriever()
             )
 
-            print("RAG System initialized successfully.")
+            print("RAG System initialization complete.")
         except Exception as e:
-            raise RuntimeError(f"Error initializing RAG: {e}")
+            full_error = f"Error during RAG initialization: {str(e)}"
+            print(f"CRITICAL ERROR: {full_error}")
+            raise RuntimeError(full_error)
 
     def query(self, question: str):
         if not self.qa_chain:
