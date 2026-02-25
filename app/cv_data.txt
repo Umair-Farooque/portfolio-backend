@@ -24,6 +24,8 @@ Data & Databases: MySQL, SQLite, ChromaDB
 Programming: Python, C++, C
 
 PROJECTS
+Invinci Voice Agent- A real-time conversational voice agent (LiveKit backend) integrating STT, LLM dialogue management, and TTS to handle end-to-end appointment booking.Demo-Voice Agent
+
 Agentic Healthcare Workflow Automation System – Built and deployed an agentic AI system that processes unstructured healthcare data (text, PDFs, scanned documents) using LLMs and OCR, validates information completeness, and executes decision-based workflows with full audit logging. Healthcare Agentic System
 
 Mednix – AI-Powered Drugs Information Assistant – Built a FastAPI-based RAG system integrating OpenAI and medical databases to deliver accurate, context-aware drug information. Mednix-Click Me
